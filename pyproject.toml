@@ -25,5 +25,8 @@ packages = ["rlalign"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+# 注意：这里**不能**放 "-q"。CI 与本地都会再传一个 -q，
+# 两个 -q 叠加成 -qq 会把 "N passed in Xs" 这一行汇总直接吞掉，
+# 日志里只剩进度点，排查时很难确认到底跑了多少用例。
+addopts = "--strict-markers --strict-config"
 filterwarnings = ["error::RuntimeWarning"]
