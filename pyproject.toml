@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rl-alignment-lab"
+version = "0.1.0"
+description = "零依赖（仅 numpy）手写 PPO / GRPO 的可验证奖励强化学习闭环"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "meminehobe24435-cmyk" }]
+# 核心运行只依赖 numpy —— 没有 torch / jax / tensorflow / gym / trl / ray。
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.7"]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+rl = "rlalign.cli:main"
+
+[tool.setuptools]
+packages = ["rlalign"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["error::RuntimeWarning"]

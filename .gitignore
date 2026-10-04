@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 测试与工具缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# 运行产物（报告与曲线是可以随时重新生成的，不入库）
+reports/
+reports_seed*/
+ci_reports*/
+*.log
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
