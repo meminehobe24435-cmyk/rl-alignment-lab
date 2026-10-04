@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.12"]
+
+    env:
+      # Windows 默认控制台编码是 GBK，日志里的中文会抛 UnicodeEncodeError
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies (numpy + pytest only)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "numpy>=1.24" "pytest>=7.0"
+
+      - name: Show installed packages
+        run: python -m pip list
+
+      - name: Zero-dependency guard
+        run: python tools/check_zero_deps.py
+
+      - name: Unit tests
+        run: python -m pytest -q
+
+      - name: Finite-difference gradient check
+        run: python -m rlalign.cli gradcheck --n-checks 8
+
+      - name: Short PPO training run
+        run: >
+          python -m rlalign.cli train --algo ppo --out ci_reports_ppo
+          --n-train 40 --n-eval 20 --iterations 3 --eval-interval 3
+
+      - name: Short GRPO training run
+        run: >
+          python -m rlalign.cli train --algo grpo --out ci_reports_grpo
+          --n-train 40 --n-eval 20 --iterations 3 --eval-interval 3
+          --group-size 4 --grpo-prompts-per-iter 4
+
+      - name: Short SFT + random baseline run
+        run: >
+          python -m rlalign.cli baseline --out ci_reports_sft
+          --n-train 40 --n-eval 20
+
+      - name: Reproducibility check (byte-identical metrics)
+        run: python tools/check_reproducibility.py
+
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-reports-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: ci_reports_*/
+          if-no-files-found: warn
